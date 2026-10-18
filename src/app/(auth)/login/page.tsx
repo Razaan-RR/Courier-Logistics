@@ -1,13 +1,23 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { api } from '@/lib/api'
+import { useAuthStore } from '@/store/auth.store'
 import { loginSchema, type LoginFormValues } from '@/schemas/auth.schema'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const setAuth = useAuthStore((state) => state.setAuth)
+  const [serverError, setServerError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -17,8 +27,51 @@ export default function LoginPage() {
     },
   })
 
-  const onSubmit = (values: LoginFormValues) => {
-    console.log(values)
+  const onSubmit = async (values: LoginFormValues) => {
+    setServerError('')
+    setIsLoading(true)
+
+    try {
+      const response = await api.post('/auth/login', values)
+      const { user, accessToken } = response.data.data
+
+      setAuth(user, accessToken)
+
+      if (user.role === 'ADMIN') {
+        router.push('/admin')
+      } else if (user.role === 'COURIER') {
+        router.push('/courier')
+      } else {
+        router.push('/customer')
+      }
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+        const response = error.response
+
+        if (
+          typeof response === 'object' &&
+          response !== null &&
+          'data' in response &&
+          typeof response.data === 'object' &&
+          response.data !== null &&
+          'message' in response.data &&
+          typeof response.data.message === 'string'
+        ) {
+          setServerError(response.data.message)
+        } else {
+          setServerError('Unable to sign in. Please try again.')
+        }
+      } else {
+        setServerError('Unable to connect to the server.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fillDemoCredentials = (email: string, password: string) => {
+    setValue('email', email, { shouldValidate: true })
+    setValue('password', password, { shouldValidate: true })
   }
 
   return (
@@ -74,11 +127,18 @@ export default function LoginPage() {
             )}
           </div>
 
+          {serverError && (
+            <p className="text-sm text-destructive" role="alert">
+              {serverError}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="h-11 w-full rounded-md bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            disabled={isLoading}
+            className="h-11 w-full cursor-pointer rounded-md bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Sign in
+            {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
@@ -91,19 +151,25 @@ export default function LoginPage() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <button
             type="button"
-            className="rounded-md border px-3 py-3 text-sm font-medium transition-colors hover:bg-muted"
+            onClick={() =>
+              fillDemoCredentials('admin@courier.com', 'Admin@123456')
+            }
+            className="cursor-pointer rounded-md border px-3 py-3 text-sm font-medium transition-colors hover:bg-muted"
           >
             Admin
           </button>
           <button
             type="button"
-            className="rounded-md border px-3 py-3 text-sm font-medium transition-colors hover:bg-muted"
+            className="cursor-pointer rounded-md border px-3 py-3 text-sm font-medium transition-colors hover:bg-muted"
           >
             Customer
           </button>
           <button
             type="button"
-            className="rounded-md border px-3 py-3 text-sm font-medium transition-colors hover:bg-muted"
+            onClick={() =>
+              fillDemoCredentials('courier@courier.com', 'Courier@123456')
+            }
+            className="cursor-pointer rounded-md border px-3 py-3 text-sm font-medium transition-colors hover:bg-muted"
           >
             Courier
           </button>
