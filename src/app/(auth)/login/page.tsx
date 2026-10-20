@@ -160,6 +160,9 @@ export default function LoginPage() {
           </button>
           <button
             type="button"
+            onClick={() =>
+              fillDemoCredentials('customer@test.com', 'Password123')
+            }
             className="cursor-pointer rounded-md border px-3 py-3 text-sm font-medium transition-colors hover:bg-muted"
           >
             Customer

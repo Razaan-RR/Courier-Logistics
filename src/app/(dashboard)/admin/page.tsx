@@ -490,13 +490,6 @@ export default function AdminPage() {
                 Here&apos;s what&apos;s happening across your delivery network.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => router.push('/admin/shipments')}
-              className="inline-flex cursor-pointer items-center justify-center gap-2 self-start rounded-xl bg-[#4f46e5] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-700 sm:self-auto"
-            >
-              <span className="text-lg">+</span> Create shipment
-            </button>
           </section>
 
           {error && (
