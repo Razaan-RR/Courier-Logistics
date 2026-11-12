@@ -108,6 +108,7 @@ export default function ShipmentDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [paymentBusy, setPaymentBusy] = useState(false)
   const [message, setMessage] = useState('')
 
   const loadDetails = useCallback(async () => {
@@ -213,6 +214,38 @@ export default function ShipmentDetailsPage() {
     }
   }
 
+  const handlePayment = async () => {
+    if (!shipment) return
+
+    setPaymentBusy(true)
+    setError('')
+    setMessage('')
+
+    try {
+      const response = await api.post('/payments', {
+        shipmentId: shipment.id,
+      })
+
+      const paymentUrl = response.data?.data?.paymentUrl
+
+      if (!paymentUrl) {
+        throw new Error('Payment URL was not returned by the server.')
+      }
+
+      window.location.assign(paymentUrl)
+    } catch (err) {
+      const e = err as {
+        response?: { data?: { message?: string } }
+        message?: string
+      }
+
+      setError(
+        e.response?.data?.message ?? e.message ?? 'Unable to initiate payment.',
+      )
+      setPaymentBusy(false)
+    }
+  }
+
   const cardClass =
     'rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6'
 
@@ -277,14 +310,25 @@ export default function ShipmentDetailsPage() {
               {formatStatus(shipment.status)}
             </span>
             {shipment.status === 'PENDING_PAYMENT' && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={cancelShipment}
-                className="cursor-pointer rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950"
-              >
-                {busy ? 'Cancelling…' : 'Cancel shipment'}
-              </button>
+              <>
+                <button
+                  type="button"
+                  disabled={paymentBusy || busy}
+                  onClick={handlePayment}
+                  className="cursor-pointer rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {paymentBusy ? 'Redirecting…' : 'Pay Now'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={busy || paymentBusy}
+                  onClick={cancelShipment}
+                  className="cursor-pointer rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950"
+                >
+                  {busy ? 'Cancelling…' : 'Cancel shipment'}
+                </button>
+              </>
             )}
           </div>
         </div>
