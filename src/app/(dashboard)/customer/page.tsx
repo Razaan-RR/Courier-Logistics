@@ -215,20 +215,22 @@ export default function CustomerPage() {
         </button>
       </div>
 
-      <button
-        type="button"
-        onClick={() => router.push('/customer/shipments')}
-        className="cursor-pointer rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-      >
-        View My Shipments
-      </button>
-      <button
-        type="button"
-        onClick={() => router.push('/customer/addresses')}
-        className="cursor-pointer rounded-md border px-5 py-3 text-sm font-medium transition-colors hover:bg-muted"
-      >
-        My Addresses
-      </button>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={() => router.push('/customer/shipments')}
+          className="cursor-pointer rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+        >
+          View My Shipments
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push('/customer/addresses')}
+          className="cursor-pointer rounded-md border px-5 py-3 text-sm font-medium transition-colors hover:bg-muted"
+        >
+          My Addresses
+        </button>
+      </div>
     </main>
   )
 }

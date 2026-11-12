@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { restoreSession, useAuthStore, logoutUser } from '@/store/auth.store'
+import { useTheme } from '@/components/providers/theme-provider'
 
 const navigation = [
   { label: 'Overview', icon: '▦', href: '/customer' },
@@ -21,21 +22,11 @@ export default function CustomerLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
+  const { theme, toggleTheme } = useTheme()
+  const darkMode = theme === 'dark'
   const [ready, setReady] = useState(false)
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('admin-theme')
-    document.documentElement.classList.toggle('dark', savedTheme === 'dark')
-  }, [darkMode])
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      const next = !prev
-      localStorage.setItem('admin-theme', next ? 'dark' : 'light')
-      return next
-    })
-  }
 
   useEffect(() => {
     let cancelled = false
@@ -78,14 +69,6 @@ export default function CustomerLayout({
     }
   }, [accessToken, router])
 
-  const toggleTheme = () => {
-    setDarkMode((current) => {
-      const next = !current
-      localStorage.setItem('admin-theme', next ? 'dark' : 'light')
-      document.documentElement.classList.toggle('dark', next)
-      return next
-    })
-  }
 
   const handleLogout = async () => {
     await logoutUser()
@@ -173,7 +156,6 @@ export default function CustomerLayout({
             })}
           </nav>
         </div>
-
 
         <div className="mt-auto p-4">
           <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/60">
