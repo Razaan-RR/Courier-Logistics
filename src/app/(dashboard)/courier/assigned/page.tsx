@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   acceptShipment,
+  pickupShipment,
   getCourierAssignedShipments,
 } from '@/services/courier.service'
 import { restoreSession, useAuthStore } from '@/store/auth.store'
@@ -46,6 +47,8 @@ const statusStyles: Record<string, string> = {
     'bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300',
   COURIER_ACCEPTED:
     'bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300',
+  COMPLETED:
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
 }
 
 const formatStatus = (status: string) =>
@@ -91,6 +94,7 @@ export default function AssignedShipmentsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
+  const [pickingUpId, setPickingUpId] = useState<string | null>(null)
 
   const loadAssignments = useCallback(async () => {
     try {
@@ -185,6 +189,29 @@ export default function AssignedShipmentsPage() {
       )
     } finally {
       setAcceptingId(null)
+    }
+  }
+
+  const handlePickup = async (shipmentId: string) => {
+    setPickingUpId(shipmentId)
+    setError('')
+
+    try {
+      await pickupShipment(shipmentId)
+      await loadAssignments()
+    } catch (err) {
+      const error = err as {
+        response?: {
+          data?: { message?: string }
+        }
+      }
+
+      setError(
+        error.response?.data?.message ??
+          'Unable to pick up this shipment. Please try again.',
+      )
+    } finally {
+      setPickingUpId(null)
     }
   }
 
@@ -340,6 +367,9 @@ export default function AssignedShipmentsPage() {
                 assignments.map((assignment) => {
                   const shipment = assignment.shipment
                   const isPending = assignment.status === 'PENDING'
+                  const isAccepted =
+                    assignment.status === 'ACCEPTED' &&
+                    shipment.status === 'COURIER_ACCEPTED'
 
                   return (
                     <tr
@@ -400,16 +430,31 @@ export default function AssignedShipmentsPage() {
                           <button
                             type="button"
                             onClick={() => handleAccept(shipment.id)}
-                            disabled={acceptingId !== null}
+                            disabled={
+                              acceptingId !== null || pickingUpId !== null
+                            }
                             className="cursor-pointer whitespace-nowrap rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600"
                           >
                             {acceptingId === shipment.id
                               ? 'Accepting…'
                               : 'Accept shipment'}
                           </button>
+                        ) : isAccepted ? (
+                          <button
+                            type="button"
+                            onClick={() => handlePickup(shipment.id)}
+                            disabled={
+                              pickingUpId !== null || acceptingId !== null
+                            }
+                            className="cursor-pointer whitespace-nowrap rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                          >
+                            {pickingUpId === shipment.id
+                              ? 'Picking up…'
+                              : 'Pickup shipment'}
+                          </button>
                         ) : (
                           <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                            Accepted ✓
+                            {formatStatus(assignment.status)} ✓
                           </span>
                         )}
                       </td>
