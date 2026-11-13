@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
 import { restoreSession, useAuthStore, logoutUser } from '@/store/auth.store'
+import { useTheme } from '@/components/providers/theme-provider'
 
 type DashboardStats = {
   totalShipments: number
@@ -129,7 +130,8 @@ export default function AdminPage() {
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [darkMode, setDarkMode] = useState(false)
+  const { theme, toggleTheme } = useTheme()
+  const darkMode = theme === 'dark'
 
   useEffect(() => {
     let cancelled = false
@@ -213,14 +215,6 @@ export default function AdminPage() {
     const savedTheme = localStorage.getItem('admin-theme')
     document.documentElement.classList.toggle('dark', savedTheme === 'dark')
   }, [darkMode])
-
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      const next = !prev
-      localStorage.setItem('admin-theme', next ? 'dark' : 'light')
-      return next
-    })
-  }
 
   const handleLogout = async () => {
     await logoutUser()
@@ -462,7 +456,7 @@ export default function AdminPage() {
             </div>
             <button
               type="button"
-              onClick={toggleDarkMode}
+              onClick={toggleTheme}
               className="cursor-pointer rounded-lg border border-slate-200 bg-white p-2 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
               aria-label={
                 darkMode ? 'Switch to light mode' : 'Switch to dark mode'
