@@ -224,9 +224,6 @@ export default function AdminPage() {
   const navigation = [
     { label: 'Overview', icon: '▦', href: '/admin' },
     { label: 'Shipments', icon: '▤', href: '/admin/shipments' },
-    { label: 'Customers', icon: '♙', href: '/admin/customers' },
-    { label: 'Couriers', icon: '♧', href: '/admin/couriers' },
-    { label: 'Payments', icon: '৳', href: '/admin/payments' },
   ]
 
   const statCards = [
